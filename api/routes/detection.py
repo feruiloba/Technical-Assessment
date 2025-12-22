@@ -4,7 +4,7 @@ import base64
 import numpy as np
 import cv2
 import uuid
-from helpers import face_cascade
+from api.helpers import face_cascade
 
 detection_bp = Blueprint('detection', __name__)
 logger = logging.getLogger(__name__)

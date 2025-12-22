@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, Project, Effect
+from api.models import db, Project, Effect
 import logging
 import json
 

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, Project
+from api.models import db, Project
 import logging
 
 projects_bp = Blueprint('projects', __name__)
