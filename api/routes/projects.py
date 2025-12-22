@@ -12,10 +12,10 @@ def create_project():
         name = data.get("name")
         video_url = data.get("video_url")
         
-        if not name or not video_url:
-            return jsonify({"error": "Name and video_url are required"}), 400
-            
-        project = Project(name=name, video_url=video_url)
+        if not name:
+            return jsonify({"error": "Name is required"}), 400
+
+        project = Project(name=name, video_url=video_url or None)
         db.session.add(project)
         db.session.commit()
         

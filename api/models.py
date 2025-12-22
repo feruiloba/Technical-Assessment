@@ -10,7 +10,7 @@ class Project(db.Model):
     
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(100), nullable=False)
-    video_url = db.Column(db.String(500), nullable=False)
+    video_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship
@@ -31,8 +31,8 @@ class Effect(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     project_id = db.Column(db.String(36), db.ForeignKey('projects.id'), nullable=False)
     type = db.Column(db.String(50), nullable=False)
-    start_time = db.Column(db.Float, nullable=False)
-    end_time = db.Column(db.Float, nullable=False)
+    start_time = db.Column(db.Float, nullable=True)
+    end_time = db.Column(db.Float, nullable=True)
     config = db.Column(db.Text, nullable=True) # JSON string
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ImageSegmenter, FilesetResolver } from '@mediapipe/tasks-vision';
 import { FaceDetection } from '../App';
-import { Timeframe } from './EffectsPanel';
+import { Timeframe } from '../types';
 
 interface Props {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -122,7 +122,11 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
       let mask: Float32Array | undefined;
 
       // Check if effect should be active based on timeframes
-      const isTimeframeActive = timeframes.length === 0 || timeframes.some(tf => currentTime >= tf.start && currentTime <= tf.end);
+      const isTimeframeActive = timeframes.some(tf => {
+        const start = tf.start;
+        const end = tf.end < 0 ? Number.MAX_VALUE : tf.end;
+        return currentTime >= start && currentTime <= end;
+      });
       const shouldApplyEffect = enabled && isTimeframeActive;
 
       if (shouldApplyEffect) {
@@ -215,7 +219,7 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
     animationId = requestAnimationFrame(processFrame);
 
     return () => cancelAnimationFrame(animationId);
-  }, [enabled, isLoading, segmenter, videoRef, onDetections]);
+  }, [enabled, isLoading, segmenter, videoRef, onDetections, timeframes]);
 
   if (error) {
     return <div className="segmentation-error">Error: {error}</div>;

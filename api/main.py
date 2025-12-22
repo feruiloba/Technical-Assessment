@@ -1,21 +1,24 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables BEFORE importing modules that use them
+load_dotenv()
+
 import cv2
 import uuid
-import os
 import json
 import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
-from dotenv import load_dotenv
 from api.helpers import face_cascade
 from api.models import db, Project, Effect
 from api.routes.projects import projects_bp
 from api.routes.effects import effects_bp
 from api.routes.detection import detection_bp
+from api.routes.upload import upload_bp
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]}})
-
-load_dotenv()
 
 # Database Configuration
 # Use SQLite for local development, but allow override for Postgres
@@ -33,6 +36,7 @@ db.init_app(app)
 app.register_blueprint(projects_bp, url_prefix='/projects')
 app.register_blueprint(effects_bp, url_prefix='/projects')
 app.register_blueprint(detection_bp)
+app.register_blueprint(upload_bp)
 
 # Create tables on startup
 with app.app_context():
