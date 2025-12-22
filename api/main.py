@@ -18,6 +18,12 @@ from api.routes.detection import detection_bp
 from api.routes.upload import upload_bp
 
 app = Flask(__name__)
+
+# Vercel/Lambda environment is read-only except for /tmp
+# We need to set instance_path to /tmp to avoid OSError when Flask-SQLAlchemy tries to create it
+if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+    app.instance_path = '/tmp'
+
 CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]}})
 
 # Database Configuration

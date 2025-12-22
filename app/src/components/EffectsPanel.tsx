@@ -6,7 +6,6 @@ import { Effect } from '../api';
 export type { Timeframe };
 
 const EFFECT_TYPES = [
-  { value: 'segmentation', label: 'Segmentation (Grayscale BG)' },
   { value: 'blur', label: 'Blur' },
   { value: 'grayscale', label: 'Grayscale' },
   { value: 'sepia', label: 'Sepia' },
@@ -42,7 +41,7 @@ const EffectsPanel: React.FC<EffectsPanelProps> = ({
 }) => {
   const [newStart, setNewStart] = useState<string>('');
   const [newEnd, setNewEnd] = useState<string>('');
-  const [newEffectType, setNewEffectType] = useState<string>('segmentation');
+  const [newEffectType, setNewEffectType] = useState<string>('grayscale');
   const [isAdding, setIsAdding] = useState(false);
   const [useTimeframe, setUseTimeframe] = useState(false);
 

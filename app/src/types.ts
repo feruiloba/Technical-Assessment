@@ -18,7 +18,7 @@ export function effectToTimeframe(effect: { start_time: number; end_time: number
 }
 
 // Convert Timeframe to EffectInput
-export function timeframeToEffectInput(timeframe: Timeframe, type: string = 'segmentation'): { type: string; start_time: number; end_time: number } {
+export function timeframeToEffectInput(timeframe: Timeframe, type: string = 'grayscale'): { type: string; start_time: number; end_time: number } {
   return {
     type,
     start_time: timeframe.start,

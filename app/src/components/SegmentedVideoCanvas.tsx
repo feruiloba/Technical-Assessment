@@ -129,7 +129,6 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
       });
 
       const shouldApplyEffect = enabled && activeEffects.length > 0;
-      const hasSegmentation = activeEffects.some(e => e.type === 'segmentation');
 
       // Apply filters for non-segmentation effects
       // We don't apply CSS filters to the context anymore because we want to apply them only to the background
@@ -173,7 +172,6 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
           activeEffects.forEach(effect => {
             switch (effect.type) {
               case 'grayscale':
-              case 'segmentation': // Original behavior was grayscale
                 const gray = Math.round(0.299 * effectR + 0.587 * effectG + 0.114 * effectB);
                 effectR = gray;
                 effectG = gray;
