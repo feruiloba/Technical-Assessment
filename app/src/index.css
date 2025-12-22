@@ -220,6 +220,7 @@ code {
   align-items: center;
   gap: 12px;
   border-left: 3px solid transparent;
+  position: relative; /* Added for absolute positioning of delete button */
 }
 
 .project-item:hover {
@@ -266,10 +267,31 @@ code {
   text-overflow: ellipsis;
 }
 
-.project-item-date {
-  font-size: 11px;
+.project-item-delete {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
   color: var(--color-text-muted);
-  margin-top: 2px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: none;
+}
+
+.project-item:hover .project-item-delete {
+  display: block;
+}
+
+.project-item-delete:hover {
+  color: var(--color-danger);
+  background: rgba(229, 62, 62, 0.1);
+}
+
+.sidebar.collapsed .project-item-delete {
+  display: none !important;
 }
 
 .sidebar.collapsed .project-list-section {
@@ -501,7 +523,7 @@ code {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0;
 }

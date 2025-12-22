@@ -5,6 +5,7 @@ interface ProjectItemProps {
   project: Project;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
   collapsed?: boolean;
 }
 
@@ -12,6 +13,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({
   project,
   isSelected,
   onSelect,
+  onDelete,
   collapsed = false,
 }) => {
   const formatDate = (dateString: string) => {
@@ -21,6 +23,13 @@ const ProjectItem: React.FC<ProjectItemProps> = ({
       day: 'numeric',
       year: 'numeric',
     });
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this project?')) {
+      onDelete(project.id);
+    }
   };
 
   return (
@@ -36,10 +45,22 @@ const ProjectItem: React.FC<ProjectItemProps> = ({
         </svg>
       </div>
       {!collapsed && (
-        <div className="project-item-content">
-          <div className="project-item-name">{project.name}</div>
-          <div className="project-item-date">{formatDate(project.created_at)}</div>
-        </div>
+        <>
+          <div className="project-item-content">
+            <div className="project-item-name">{project.name}</div>
+            <div className="project-item-date">{formatDate(project.created_at)}</div>
+          </div>
+          <button 
+            className="project-item-delete"
+            onClick={handleDelete}
+            title="Delete project"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </>
       )}
     </div>
   );

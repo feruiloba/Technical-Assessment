@@ -128,7 +128,7 @@ const App: React.FC = () => {
 
               {hasVideo ? (
                 <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', alignItems: 'flex-start' }}>
-                  <div style={{ width: '300px', flexShrink: 0 }}>
+                  <div style={{ width: '250px', flexShrink: 0 }}>
                     <DetectionStats
                       detections={detections}
                       processingTime={processingTime}
@@ -136,22 +136,9 @@ const App: React.FC = () => {
                       faceDetectionEnabled={faceDetectionEnabled}
                       onToggleFaceDetection={() => setFaceDetectionEnabled(!faceDetectionEnabled)}
                     />
-
-                    <EffectsPanel
-                      effectEnabled={segmentationEnabled}
-                      onToggleEffect={() => setSegmentationEnabled(!segmentationEnabled)}
-                      timeframes={timeframes}
-                      onAddTimeframe={handleAddTimeframe}
-                      onRemoveTimeframe={handleRemoveTimeframe}
-                      getCurrentTime={() => videoRef.current?.currentTime || 0}
-                      projectId={selectedProject.id}
-                      effects={selectedProject.effects}
-                      onAddEffect={addEffect}
-                      onRemoveEffect={removeEffect}
-                    />
                   </div>
 
-                  <div style={{ flexGrow: 1, maxWidth: '800px' }}>
+                  <div style={{ flexGrow: 1, maxWidth: '1200px' }}>
                     <div
                       ref={containerRef}
                       className={`video-container ${isFullscreen ? 'fullscreen' : ''}`}
@@ -196,6 +183,22 @@ const App: React.FC = () => {
                         )}
                       </button>
                     </div>
+                  </div>
+
+                  <div style={{ width: '300px', flexShrink: 0 }}>
+                      <EffectsPanel
+                      effectEnabled={segmentationEnabled}
+                      onToggleEffect={() => setSegmentationEnabled(!segmentationEnabled)}
+                      timeframes={timeframes}
+                      onAddTimeframe={handleAddTimeframe}
+                      onRemoveTimeframe={handleRemoveTimeframe}
+                      getCurrentTime={() => videoRef.current?.currentTime || 0}
+                      videoDuration={videoRef.current?.duration || 0}
+                      projectId={selectedProject.id}
+                      effects={selectedProject.effects}
+                      onAddEffect={addEffect}
+                      onRemoveEffect={removeEffect}
+                    />
                   </div>
                 </div>
               ) : (

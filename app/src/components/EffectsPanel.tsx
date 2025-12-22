@@ -20,6 +20,7 @@ interface EffectsPanelProps {
   onAddTimeframe: (frame: Timeframe) => void;
   onRemoveTimeframe: (index: number) => void;
   getCurrentTime: () => number;
+  videoDuration?: number;
   projectId?: string;
   effects?: Effect[];
   onAddEffect?: (effect: { type: string; start_time: number; end_time: number }) => Promise<void>;
@@ -33,6 +34,7 @@ const EffectsPanel: React.FC<EffectsPanelProps> = ({
   onAddTimeframe,
   onRemoveTimeframe,
   getCurrentTime,
+  videoDuration = 0,
   projectId,
   effects = [],
   onAddEffect,
@@ -58,16 +60,57 @@ const EffectsPanel: React.FC<EffectsPanelProps> = ({
     setIsAdding(true);
     try {
       if (onAddEffect) {
-        await onAddEffect({
-          type: newEffectType,
-          start_time: start,
-          end_time: end,
-        });
+        if (!useTimeframe && videoDuration > 0) {
+          // Calculate gaps and fill them
+          // 1. Get all intervals, treating end < 0 as duration
+          const intervals = effects.map(e => ({
+            start: e.start_time,
+            end: e.end_time < 0 ? videoDuration : e.end_time
+          })).sort((a, b) => a.start - b.start);
+
+          // 2. Find gaps
+          const gaps: { start: number; end: number }[] = [];
+          let currentPointer = 0;
+
+          for (const interval of intervals) {
+            if (interval.start > currentPointer) {
+              gaps.push({ start: currentPointer, end: interval.start });
+            }
+            currentPointer = Math.max(currentPointer, interval.end);
+          }
+
+          if (currentPointer < videoDuration) {
+            gaps.push({ start: currentPointer, end: videoDuration });
+          }
+
+          // 3. Add effects for gaps
+          if (gaps.length > 0) {
+            await Promise.all(gaps.map(gap => onAddEffect({
+              type: newEffectType,
+              start_time: gap.start,
+              end_time: gap.end,
+            })));
+          } else if (effects.length === 0) {
+             // No effects, add full video
+             await onAddEffect({
+              type: newEffectType,
+              start_time: 0,
+              end_time: -1,
+            });
+          }
+        } else {
+          await onAddEffect({
+            type: newEffectType,
+            start_time: start,
+            end_time: end,
+          });
+        }
       } else {
         // Fallback to old timeframe method
         await onAddTimeframe({ 
           start: start, 
-          end: end 
+          end: end,
+          type: newEffectType
         });
       }
       setNewStart('');
@@ -111,8 +154,10 @@ const EffectsPanel: React.FC<EffectsPanelProps> = ({
     return colors[type] || '#4299e1';
   };
 
+  const hasFullVideoEffect = effects.some(e => e.end_time < 0);
+
   return (
-    <div className="stats" style={{ marginTop: '20px' }}>
+    <div className="stats">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <h3 style={{ margin: 0 }}>Video Effects</h3>
         <button
@@ -141,7 +186,9 @@ const EffectsPanel: React.FC<EffectsPanelProps> = ({
           </p>
         ) : (
           <div className="timeframe-list">
-            {effects.map((effect, index) => (
+            {[...effects]
+              .sort((a, b) => a.start_time - b.start_time)
+              .map((effect, index) => (
               <div key={effect.id || index} className="timeframe-item">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
                   <span
@@ -275,12 +322,24 @@ const EffectsPanel: React.FC<EffectsPanelProps> = ({
           onClick={handleAdd}
           className="btn btn-primary"
           style={{ width: '100%' }}
-          disabled={isAdding || !projectId || (useTimeframe && (!newStart || !newEnd))}
+          disabled={isAdding || !projectId || (useTimeframe && (!newStart || !newEnd)) || (hasFullVideoEffect && !useTimeframe)}
+          title={hasFullVideoEffect && !useTimeframe ? "Full video effect already active" : undefined}
         >
           {isAdding ? 'Adding...' : 'Add Effect'}
         </button>
 
-        {!projectId && (
+        {hasFullVideoEffect && !useTimeframe && (
+          <p style={{
+            margin: '8px 0 0',
+            fontSize: '11px',
+            color: 'var(--color-text-muted)',
+            textAlign: 'center'
+          }}>
+            Full video effect is active. Add specific timeframes or remove it to fill gaps.
+          </p>
+        )}
+
+        {!projectId && !hasFullVideoEffect && (
           <p style={{
             margin: '8px 0 0',
             fontSize: '11px',

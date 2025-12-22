@@ -17,6 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapseChange }) => {
     selectedProject,
     selectProject,
     createProject,
+    deleteProject,
   } = useProject();
 
   const handleToggleCollapse = () => {
@@ -58,6 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapseChange }) => {
           projects={projects}
           selectedProjectId={selectedProject?.id || null}
           onSelectProject={selectProject}
+          onDeleteProject={deleteProject}
           isLoading={isLoadingProjects}
           collapsed={isCollapsed}
         />

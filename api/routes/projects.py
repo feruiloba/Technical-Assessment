@@ -62,3 +62,17 @@ def update_project(project_id):
     except Exception as e:
         logger.error(f"Error updating project: {e}")
         return jsonify({"error": str(e)}), 500
+
+@projects_bp.route("/<project_id>", methods=["DELETE"])
+def delete_project(project_id):
+    try:
+        project = Project.query.get(project_id)
+        if not project:
+            return jsonify({"error": "Project not found"}), 404
+            
+        db.session.delete(project)
+        db.session.commit()
+        return jsonify({"message": "Project deleted"}), 200
+    except Exception as e:
+        logger.error(f"Error deleting project: {e}")
+        return jsonify({"error": str(e)}), 500

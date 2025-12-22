@@ -121,14 +121,20 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
 
       let mask: Float32Array | undefined;
 
-      // Check if effect should be active based on timeframes
-      const isTimeframeActive = timeframes.some(tf => {
+      // Find all active effects for the current time
+      const activeEffects = timeframes.filter(tf => {
         const start = tf.start;
         const end = tf.end < 0 ? Number.MAX_VALUE : tf.end;
         return currentTime >= start && currentTime <= end;
       });
-      const shouldApplyEffect = enabled && isTimeframeActive;
 
+      const shouldApplyEffect = enabled && activeEffects.length > 0;
+      const hasSegmentation = activeEffects.some(e => e.type === 'segmentation');
+
+      // Apply filters for non-segmentation effects
+      // We don't apply CSS filters to the context anymore because we want to apply them only to the background
+      // Instead, we'll manually apply the effects pixel-by-pixel
+      
       if (shouldApplyEffect) {
         const result = seg.segmentForVideo(v, performance.now());
         mask = result.confidenceMasks?.[0]?.getAsFloat32Array();
@@ -142,24 +148,15 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
         const pixels = imageData.data;
 
         // Gamma Correction to tighten the mask
-        // Raising confidence to a power suppresses low/mid values (aura/noise)
-        // while preserving high values (core body).
-        // This effectively shrinks the mask slightly and cleans up edges.
         const gamma = 3.0;
-
-        // Soft blending parameters
         const lowThreshold = 0.1;
         const highThreshold = 0.8;
 
         for (let i = 0; i < mask.length; i++) {
           let confidence = mask[i];
-          
-          // Apply Gamma Correction
-          // 0.5 ^ 3 = 0.125 (becomes background)
-          // 0.9 ^ 3 = 0.729 (stays foreground)
           confidence = Math.pow(confidence, gamma);
           
-          // Optimization: If confidence is high enough, keep original color (skip calculation)
+          // If confidence is high (foreground), skip processing to keep original person
           if (confidence > highThreshold) continue;
 
           const pixelIndex = i * 4;
@@ -167,26 +164,56 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
           const g = pixels[pixelIndex + 1];
           const b = pixels[pixelIndex + 2];
           
-          // Calculate grayscale version
-          const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+          // Calculate effect color for background
+          let effectR = r;
+          let effectG = g;
+          let effectB = b;
+
+          // Apply active effects to background
+          activeEffects.forEach(effect => {
+            switch (effect.type) {
+              case 'grayscale':
+              case 'segmentation': // Original behavior was grayscale
+                const gray = Math.round(0.299 * effectR + 0.587 * effectG + 0.114 * effectB);
+                effectR = gray;
+                effectG = gray;
+                effectB = gray;
+                break;
+              case 'sepia':
+                const sepiaR = (effectR * 0.393) + (effectG * 0.769) + (effectB * 0.189);
+                const sepiaG = (effectR * 0.349) + (effectG * 0.686) + (effectB * 0.168);
+                const sepiaB = (effectR * 0.272) + (effectG * 0.534) + (effectB * 0.131);
+                effectR = Math.min(255, sepiaR);
+                effectG = Math.min(255, sepiaG);
+                effectB = Math.min(255, sepiaB);
+                break;
+              case 'invert':
+                effectR = 255 - effectR;
+                effectG = 255 - effectG;
+                effectB = 255 - effectB;
+                break;
+              case 'blur':
+                // Simple darkening as placeholder for blur
+                effectR = effectR * 0.8;
+                effectG = effectG * 0.8;
+                effectB = effectB * 0.8;
+                break;
+            }
+          });
 
           if (confidence < lowThreshold) {
-            // Fully background - apply full grayscale
-            pixels[pixelIndex] = gray;
-            pixels[pixelIndex + 1] = gray;
-            pixels[pixelIndex + 2] = gray;
+            // Fully background - apply full effect
+            pixels[pixelIndex] = effectR;
+            pixels[pixelIndex + 1] = effectG;
+            pixels[pixelIndex + 2] = effectB;
           } else {
-            // Transition zone - blend color and grayscale
-            // Normalize confidence between 0 and 1 based on thresholds
+            // Transition zone - blend original and effect
             const t = (confidence - lowThreshold) / (highThreshold - lowThreshold);
-            
-            // Use ease-in-out curve to make the transition smoother
             const alpha = t * t * (3 - 2 * t);
             
-            // Blend: 0 = gray, 1 = color
-            pixels[pixelIndex] = Math.round(r * alpha + gray * (1 - alpha));
-            pixels[pixelIndex + 1] = Math.round(g * alpha + gray * (1 - alpha));
-            pixels[pixelIndex + 2] = Math.round(b * alpha + gray * (1 - alpha));
+            pixels[pixelIndex] = Math.round(r * alpha + effectR * (1 - alpha));
+            pixels[pixelIndex + 1] = Math.round(g * alpha + effectG * (1 - alpha));
+            pixels[pixelIndex + 2] = Math.round(b * alpha + effectB * (1 - alpha));
           }
         }
 

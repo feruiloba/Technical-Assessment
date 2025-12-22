@@ -6,6 +6,7 @@ interface ProjectListProps {
   projects: Project[];
   selectedProjectId: string | null;
   onSelectProject: (id: string) => void;
+  onDeleteProject: (id: string) => void;
   isLoading: boolean;
   collapsed?: boolean;
 }
@@ -14,6 +15,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
   projects,
   selectedProjectId,
   onSelectProject,
+  onDeleteProject,
   isLoading,
   collapsed = false,
 }) => {
@@ -85,6 +87,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
               project={project}
               isSelected={project.id === selectedProjectId}
               onSelect={onSelectProject}
+              onDelete={onDeleteProject}
               collapsed={collapsed}
             />
           ))}

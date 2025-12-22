@@ -16,6 +16,7 @@ interface ProjectContextValue {
   selectProject: (id: string | null) => Promise<void>;
   createProject: (data: CreateProjectInput) => Promise<Project>;
   updateProject: (id: string, data: Partial<CreateProjectInput>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
 
   // Effects actions
   addEffect: (effect: EffectInput) => Promise<void>;
@@ -89,6 +90,14 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     }
   }, [selectedProject]);
 
+  const deleteProject = useCallback(async (id: string) => {
+    await projectsApi.delete(id);
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+    if (selectedProject?.id === id) {
+      setSelectedProject(null);
+    }
+  }, [selectedProject]);
+
   const addEffect = useCallback(async (effect: EffectInput) => {
     if (!selectedProject) return;
 
@@ -144,6 +153,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     selectProject,
     createProject,
     updateProject,
+    deleteProject,
     addEffect,
     updateAllEffects,
     removeEffect,

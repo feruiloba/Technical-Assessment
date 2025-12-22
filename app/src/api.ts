@@ -73,6 +73,11 @@ export const projectsApi = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+
+  delete: (id: string) =>
+    apiFetch<void>(`/projects/${id}`, {
+      method: 'DELETE',
+    }),
 };
 
 export const effectsApi = {

@@ -5,13 +5,15 @@ export type { Project, Effect, EffectInput, CreateProjectInput } from './api';
 export interface Timeframe {
   start: number;
   end: number;
+  type: string;
 }
 
 // Convert Effect to Timeframe
-export function effectToTimeframe(effect: { start_time: number; end_time: number }): Timeframe {
+export function effectToTimeframe(effect: { start_time: number; end_time: number; type: string }): Timeframe {
   return {
     start: effect.start_time,
     end: effect.end_time,
+    type: effect.type,
   };
 }
 
