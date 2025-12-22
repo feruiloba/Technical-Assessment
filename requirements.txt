@@ -3,6 +3,6 @@ requests
 python-dotenv
 flask
 flask_cors
-opencv-python
+opencv-python-headless
 flask-sqlalchemy
 
