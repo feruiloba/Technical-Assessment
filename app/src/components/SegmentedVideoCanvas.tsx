@@ -20,7 +20,6 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
   const [error, setError] = useState<string | null>(null);
   const lastDetectionTime = useRef<number>(0);
   const lastProcessedTime = useRef<number>(0);
-  const [processingTime, setProcessingTime] = useState(0);
 
   // Load the MediaPipe segmentation model once on mount
   useEffect(() => {
@@ -54,6 +53,7 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
     return () => {
       segmenter?.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Main rendering loop
@@ -245,7 +245,7 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
     animationId = requestAnimationFrame(processFrame);
 
     return () => cancelAnimationFrame(animationId);
-  }, [enabled, isLoading, segmenter, videoRef, onDetections, timeframes]);
+  }, [enabled, isLoading, segmenter, videoRef, onDetections, timeframes, onProcessingTime]);
 
   if (error) {
     return <div className="segmentation-error">Error: {error}</div>;
