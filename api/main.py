@@ -6,11 +6,11 @@ import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-from helpers import face_cascade
-from models import db, Project, Effect
-from routes.projects import projects_bp
-from routes.effects import effects_bp
-from routes.detection import detection_bp
+from api.helpers import face_cascade
+from api.models import db, Project, Effect
+from api.routes.projects import projects_bp
+from api.routes.effects import effects_bp
+from api.routes.detection import detection_bp
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]}})
