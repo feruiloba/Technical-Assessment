@@ -15,8 +15,8 @@
     { "src": "/detect-faces", "dest": "/api/main.py" },
     { "src": "/upload", "dest": "/api/main.py" },
     { "src": "/hello-world", "dest": "/api/main.py" },
-    { "src": "/(.*)", "dest": "/$1" },
-    { "handle": "filesystem" },
+    { "src": "/static/(.*)", "dest": "/static/$1" },
+    { "src": "/(.*)\\.(.*)", "dest": "/$1.$2" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
