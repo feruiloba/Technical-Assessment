@@ -1,9 +1,22 @@
 {
-  "rewrites": [
-    { "source": "/projects(.*)", "destination": "/api/main.py" },
-    { "source": "/detect-faces", "destination": "/api/main.py" },
-    { "source": "/upload", "destination": "/api/main.py" },
-    { "source": "/hello-world", "destination": "/api/main.py" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "builds": [
+    {
+      "src": "api/main.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
+    }
+  ],
+  "routes": [
+    { "src": "/projects(.*)", "dest": "/api/main.py" },
+    { "src": "/detect-faces", "dest": "/api/main.py" },
+    { "src": "/upload", "dest": "/api/main.py" },
+    { "src": "/hello-world", "dest": "/api/main.py" },
+    { "src": "/static/(.*)", "dest": "/static/$1" },
+    { "src": "/(.*)\\.(.*)", "dest": "/$1.$2" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
