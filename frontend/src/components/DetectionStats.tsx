@@ -5,12 +5,16 @@ interface DetectionStatsProps {
   detections: FaceDetection[];
   processingTime: number;
   isDetecting: boolean;
+  faceDetectionEnabled: boolean;
+  onToggleFaceDetection: () => void;
 }
 
 const DetectionStats: React.FC<DetectionStatsProps> = ({ 
   detections, 
   processingTime, 
-  isDetecting 
+  isDetecting,
+  faceDetectionEnabled,
+  onToggleFaceDetection
 }) => {
   const averageConfidence = detections.length > 0 
     ? detections.reduce((sum, det) => sum + det.confidence, 0) / detections.length
@@ -18,7 +22,16 @@ const DetectionStats: React.FC<DetectionStatsProps> = ({
 
   return (
     <div className="stats">
-      <h3>Detection Results</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <h3 style={{ margin: 0 }}>Detection Results</h3>
+        <button
+          onClick={onToggleFaceDetection}
+          className="btn btn-secondary"
+          style={{ padding: '5px 10px', fontSize: '12px' }}
+        >
+          {faceDetectionEnabled ? 'Hide' : 'Show'} Face Boxes
+        </button>
+      </div>
       <div className="stats-grid">
         <div className="stat-item">
           <div className="stat-value">
@@ -39,24 +52,6 @@ const DetectionStats: React.FC<DetectionStatsProps> = ({
           <div className="stat-label">Processing Time</div>
         </div>
       </div>
-      
-      {detections.length > 0 && (
-        <div style={{ marginTop: '15px' }}>
-          <h4>Individual Detections:</h4>
-          <ul style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
-            {detections.map((detection) => (
-              <li key={detection.id} style={{ margin: '5px 0' }}>
-                {detection.label || `Face ${detection.id}`}: {Math.round(detection.confidence * 100)}% confidence
-                <br />
-                <small>
-                  Position: ({detection.x}, {detection.y}) 
-                  Size: {detection.width}x{detection.height}
-                </small>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 };

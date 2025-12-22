@@ -3,15 +3,24 @@ import { FaceDetection } from '../App';
 
 interface FaceDetectionOverlayProps {
   detections: FaceDetection[];
-  videoRef: React.RefObject<HTMLVideoElement>;
+  isFullscreen?: boolean;
 }
 
 const FaceDetectionOverlay: React.FC<FaceDetectionOverlayProps> = ({ 
-  detections, 
-  videoRef 
+  detections,
+  isFullscreen
 }) => {
   return (
-    <div className="detection-overlay">
+    <div
+      className="detection-overlay"
+      style={{
+        position: isFullscreen ? 'fixed' : undefined,
+        top: isFullscreen ? 0 : undefined,
+        left: isFullscreen ? 0 : undefined,
+        width: isFullscreen ? '100vw' : undefined,
+        height: isFullscreen ? '100vh' : undefined,
+      }}
+    >
       {detections.map((detection) => (
         <div
           key={detection.id}
