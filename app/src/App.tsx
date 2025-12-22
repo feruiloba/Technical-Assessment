@@ -3,6 +3,7 @@ import VideoPlayer from './components/VideoPlayer';
 import SegmentedVideoCanvas from './components/SegmentedVideoCanvas';
 import FaceDetectionOverlay from './components/FaceDetectionOverlay';
 import DetectionStats from './components/DetectionStats';
+import EffectsPanel, { Timeframe } from './components/EffectsPanel';
 import { videoUrl } from './consts';
 
 export interface FaceDetection {
@@ -23,6 +24,7 @@ const App: React.FC = () => {
   const [detections, setDetections] = useState<FaceDetection[]>([]);
   const [processingTime, setProcessingTime] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [timeframes, setTimeframes] = useState<Timeframe[]>([]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -65,6 +67,15 @@ const App: React.FC = () => {
               onToggleFaceDetection={() => setFaceDetectionEnabled(!faceDetectionEnabled)}
             />
           )}
+          
+          <EffectsPanel
+            effectEnabled={segmentationEnabled}
+            onToggleEffect={() => setSegmentationEnabled(!segmentationEnabled)}
+            timeframes={timeframes}
+            onAddTimeframe={(tf) => setTimeframes([...timeframes, tf])}
+            onRemoveTimeframe={(index) => setTimeframes(timeframes.filter((_, i) => i !== index))}
+            getCurrentTime={() => videoRef.current?.currentTime || 0}
+          />
         </div>
 
         <div style={{ flexGrow: 1, maxWidth: '800px' }}>
@@ -82,6 +93,7 @@ const App: React.FC = () => {
             <SegmentedVideoCanvas
               videoRef={videoRef}
               enabled={segmentationEnabled}
+              timeframes={timeframes}
               onDetections={setDetections}
               onProcessingTime={setProcessingTime}
               isFullscreen={isFullscreen}
@@ -113,12 +125,7 @@ const App: React.FC = () => {
           </div>
 
           <div className="controls">
-            <button
-              onClick={() => setSegmentationEnabled(!segmentationEnabled)}
-              className="btn btn-primary"
-            >
-              {segmentationEnabled ? 'Disable' : 'Enable'} Effect
-            </button>
+            {/* Effect toggle moved to EffectsPanel */}
           </div>
         </div>
       </div>

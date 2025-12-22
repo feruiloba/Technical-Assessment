@@ -1,16 +1,18 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ImageSegmenter, FilesetResolver } from '@mediapipe/tasks-vision';
 import { FaceDetection } from '../App';
+import { Timeframe } from './EffectsPanel';
 
 interface Props {
   videoRef: React.RefObject<HTMLVideoElement>;
   enabled: boolean;
+  timeframes?: Timeframe[];
   onDetections?: (detections: FaceDetection[]) => void;
   onProcessingTime?: (time: number) => void;
   isFullscreen?: boolean;
 }
 
-const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, onDetections, onProcessingTime, isFullscreen }) => {
+const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes = [], onDetections, onProcessingTime, isFullscreen }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [segmenter, setSegmenter] = useState<ImageSegmenter | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,9 +119,13 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, onDetections
       }
       lastProcessedTime.current = currentTime;
 
-      // Get segmentation mask from MediaPipe Selfie Segmenter
       let mask: Float32Array | undefined;
-      if (enabled) {
+
+      // Check if effect should be active based on timeframes
+      const isTimeframeActive = timeframes.length === 0 || timeframes.some(tf => currentTime >= tf.start && currentTime <= tf.end);
+      const shouldApplyEffect = enabled && isTimeframeActive;
+
+      if (shouldApplyEffect) {
         const result = seg.segmentForVideo(v, performance.now());
         mask = result.confidenceMasks?.[0]?.getAsFloat32Array();
       }
@@ -127,7 +133,7 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, onDetections
       // Draw video frame to canvas
       context.drawImage(v, 0, 0);
 
-      if (mask && enabled) {
+      if (mask && shouldApplyEffect) {
         const imageData = context.getImageData(0, 0, c.width, c.height);
         const pixels = imageData.data;
 
@@ -181,7 +187,7 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, onDetections
         }
 
         context.putImageData(imageData, 0, 0);
-      } else if (!enabled) {
+      } else if (!shouldApplyEffect) {
         // If effect is disabled, we still need to draw the video to the canvas
         // so we can extract the image for face detection.
         // However, we don't want to show this canvas to the user if the effect is disabled.
@@ -227,6 +233,17 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, onDetections
           display: 'block', // Always render, but control visibility via opacity if needed, or just let it be hidden by z-index if behind video? 
           // Actually, if enabled is false, we want to hide the canvas from view but keep it updating for detection.
           // Setting opacity: 0 or visibility: hidden works. display: none stops rendering in some browsers/contexts or makes dimensions 0.
+          // We check timeframes in the loop, but for visibility we can just check enabled state? 
+          // No, if we are outside timeframe, we should hide the canvas (show original video).
+          // But wait, the canvas draws the original video if mask is null? No, we draw image(v,0,0).
+          // If we don't have a mask, we just draw the video. So the canvas looks like the video.
+          // BUT, the canvas is overlaid on the video. If we draw the video on the canvas, it looks the same.
+          // However, to be safe and efficient, we can hide it when effect is not applied.
+          // But since we calculate 'shouldApplyEffect' inside the loop based on time, we can't easily control CSS visibility from here without state.
+          // Actually, if we just draw the video frame when effect is off, it's fine. The user sees the video.
+          // The only issue is if there's a slight sync delay.
+          // Let's keep it simple: always visible if enabled is true, but inside the loop we decide whether to apply the filter.
+          // If enabled is true but outside timeframe, we draw video without filter.
           visibility: enabled ? 'visible' : 'hidden',
           position: isFullscreen ? 'fixed' : undefined,
           top: isFullscreen ? 0 : undefined,

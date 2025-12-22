@@ -1,6 +1,4 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from dotenv import load_dotenv
+from flask import Blueprint, request, jsonify
 import logging
 import base64
 import numpy as np
@@ -8,24 +6,10 @@ import cv2
 import uuid
 from helpers import face_cascade
 
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}})
-
-load_dotenv()
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+detection_bp = Blueprint('detection', __name__)
 logger = logging.getLogger(__name__)
 
-@app.route("/hello-world", methods=["GET"])
-def hello_world():
-    try:
-        return jsonify({"Hello": "World"}), 200
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/detect-faces", methods=["POST"])
+@detection_bp.route("/detect-faces", methods=["POST"])
 def detect_faces():
     try:
         data = request.get_json()
@@ -75,8 +59,3 @@ def detect_faces():
     except Exception as e:
         logger.error(f"Error in face detection: {e}")
         return jsonify({"error": str(e)}), 500
-
-
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8080, debug=True, use_reloader=False)
