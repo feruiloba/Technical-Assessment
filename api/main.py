@@ -17,7 +17,7 @@ from api.routes.effects import effects_bp
 from api.routes.detection import detection_bp
 from api.routes.upload import upload_bp
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../app/build', static_url_path='/')
 
 # Vercel/Lambda environment is read-only except for /tmp
 # We need to set instance_path to /tmp to avoid OSError when Flask-SQLAlchemy tries to create it
@@ -59,6 +59,12 @@ def hello_world():
     except Exception as e:
         logger.error(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
+
+# Catch-all route to prevent Flask 404s interfering with frontend routing
+# This is useful if Vercel routing falls through to Flask for some reason
+@app.errorhandler(404)
+def not_found(e):
+    return app.send_static_file('index.html')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080, debug=True, use_reloader=False)

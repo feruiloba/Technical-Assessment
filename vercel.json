@@ -1,0 +1,20 @@
+{
+  "builds": [
+    {
+      "src": "api/main.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "app/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
+    }
+  ],
+  "rewrites": [
+    { "source": "/projects(.*)", "destination": "/api/main.py" },
+    { "source": "/detect-faces", "destination": "/api/main.py" },
+    { "source": "/upload", "destination": "/api/main.py" },
+    { "source": "/hello-world", "destination": "/api/main.py" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
