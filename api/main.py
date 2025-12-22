@@ -17,7 +17,7 @@ from api.routes.effects import effects_bp
 from api.routes.detection import detection_bp
 from api.routes.upload import upload_bp
 
-app = Flask(__name__, static_folder='../app/build', static_url_path='/')
+app = Flask(__name__, static_folder='../build', static_url_path='/')
 
 # Vercel/Lambda environment is read-only except for /tmp
 # We need to set instance_path to /tmp to avoid OSError when Flask-SQLAlchemy tries to create it
