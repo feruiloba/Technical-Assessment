@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { ImageSegmenter, FilesetResolver } from '@mediapipe/tasks-vision';
 import { FaceDetection } from '../App';
 import { Timeframe } from '../types';
+import { API_BASE } from '../api';
 
 interface Props {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -75,7 +76,7 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
 
     async function detectFaces(imageDataUrl: string) {
       try {
-        const response = await fetch('http://127.0.0.1:8080/detect-faces', {
+        const response = await fetch(`${API_BASE}/detect-faces`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: imageDataUrl }),
