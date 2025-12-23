@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import ProjectList from './ProjectList';
 import CreateProjectModal from './CreateProjectModal';
@@ -12,6 +12,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapseChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { projectId } = useParams();
 
   const {
     projects,
@@ -19,6 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapseChange }) => {
     selectedProject,
     createProject,
     deleteProject,
+    selectProject,
   } = useProject();
 
   const handleToggleCollapse = () => {
@@ -34,7 +36,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapseChange }) => {
 
   const handleSelectProject = (id: string | null) => {
     if (id) {
-      navigate(`/project/${id}`);
+      // If clicking on the same project that's already in the URL, reload it
+      if (id === projectId) {
+        selectProject(id);
+      } else {
+        navigate(`/project/${id}`);
+      }
     } else {
       navigate('/');
     }

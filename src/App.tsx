@@ -38,14 +38,14 @@ const Dashboard: React.FC = () => {
 
   const { selectedProject, addEffect, removeEffect, updateProject, selectProject } = useProject();
 
-  // Sync URL -> Context
+  // Sync URL -> Context: Load project when URL changes
   useEffect(() => {
-    if (projectId && projectId !== selectedProject?.id) {
+    if (projectId) {
       selectProject(projectId);
-    } else if (!projectId && selectedProject) {
+    } else {
       selectProject(null);
     }
-  }, [projectId, selectProject, selectedProject]);
+  }, [projectId, selectProject]);
 
   // Check if project has a video
   const hasVideo = selectedProject?.video_url;
