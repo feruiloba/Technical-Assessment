@@ -28,8 +28,8 @@ if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
 CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]}})
 
 # Database Configuration
-# Use SQLite for local development, but allow override for Postgres
-db_url = os.getenv('DATABASE_URL', 'sqlite:///video_editor.db')
+# Use PRISMA_DATABASE_URL if available, otherwise DATABASE_URL, fallback to SQLite
+db_url = os.getenv('PRISMA_DATABASE_URL') or os.getenv('DATABASE_URL', 'sqlite:///video_editor.db')
 # Fix for Heroku/Vercel postgres URLs starting with postgres:// instead of postgresql://
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
