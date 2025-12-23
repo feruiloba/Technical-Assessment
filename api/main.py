@@ -30,6 +30,21 @@ CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS
 # Database Configuration
 # Use PRISMA_DATABASE_URL if available, otherwise DATABASE_URL, fallback to SQLite
 db_url = os.getenv('PRISMA_DATABASE_URL') or os.getenv('DATABASE_URL', 'sqlite:///video_editor.db')
+
+# Convert Prisma-style URLs to standard PostgreSQL format for SQLAlchemy
+# Prisma URLs may use formats like: prisma+postgres://, prisma://accelerate.prisma-data.net/?api_key=...
+if 'prisma' in db_url.lower():
+    # If it's a Prisma Accelerate URL, we need a direct database URL instead
+    # Check for a direct postgres URL in DIRECT_URL or DATABASE_URL_UNPOOLED
+    direct_url = os.getenv('DIRECT_URL') or os.getenv('DATABASE_URL_UNPOOLED') or os.getenv('DATABASE_URL')
+    if direct_url and 'prisma' not in direct_url.lower():
+        db_url = direct_url
+    else:
+        # Try to extract/convert the URL - remove prisma+ prefix if present
+        db_url = db_url.replace("prisma+postgres://", "postgresql://")
+        db_url = db_url.replace("prisma+postgresql://", "postgresql://")
+        db_url = db_url.replace("prisma://", "postgresql://")
+
 # Fix for Heroku/Vercel postgres URLs starting with postgres:// instead of postgresql://
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
