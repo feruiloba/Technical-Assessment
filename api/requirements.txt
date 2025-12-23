@@ -6,4 +6,5 @@ flask_cors
 opencv-python-headless
 flask-sqlalchemy
 cloudinary
+anthropic
 

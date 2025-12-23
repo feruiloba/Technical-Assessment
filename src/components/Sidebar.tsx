@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import ProjectList from './ProjectList';
 import CreateProjectModal from './CreateProjectModal';
@@ -10,12 +11,12 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onCollapseChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const {
     projects,
     isLoadingProjects,
     selectedProject,
-    selectProject,
     createProject,
     deleteProject,
   } = useProject();
@@ -28,7 +29,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapseChange }) => {
 
   const handleCreateProject = async (name: string, videoUrl?: string) => {
     const project = await createProject({ name, video_url: videoUrl });
-    await selectProject(project.id);
+    navigate(`/project/${project.id}`);
+  };
+
+  const handleSelectProject = (id: string | null) => {
+    if (id) {
+      navigate(`/project/${id}`);
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -58,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapseChange }) => {
         <ProjectList
           projects={projects}
           selectedProjectId={selectedProject?.id || null}
-          onSelectProject={selectProject}
+          onSelectProject={handleSelectProject}
           onDeleteProject={deleteProject}
           isLoading={isLoadingProjects}
           collapsed={isCollapsed}

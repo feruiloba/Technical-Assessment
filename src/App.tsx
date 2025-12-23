@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { Routes, Route, useParams } from 'react-router-dom';
 import VideoPlayer from './components/VideoPlayer';
 import SegmentedVideoCanvas from './components/SegmentedVideoCanvas';
 import FaceDetectionOverlay from './components/FaceDetectionOverlay';
 import DetectionStats from './components/DetectionStats';
 import EffectsPanel from './components/EffectsPanel';
+import ChatInterface from './components/ChatInterface';
 import Sidebar from './components/Sidebar';
 import { useProject } from './context/ProjectContext';
 import { uploadApi } from './api';
@@ -19,7 +21,8 @@ export interface FaceDetection {
   label?: string;
 }
 
-const App: React.FC = () => {
+const Dashboard: React.FC = () => {
+  const { projectId } = useParams();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -33,7 +36,16 @@ const App: React.FC = () => {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
 
-  const { selectedProject, addEffect, removeEffect, updateProject } = useProject();
+  const { selectedProject, addEffect, removeEffect, updateProject, selectProject } = useProject();
+
+  // Sync URL -> Context
+  useEffect(() => {
+    if (projectId && projectId !== selectedProject?.id) {
+      selectProject(projectId);
+    } else if (!projectId && selectedProject) {
+      selectProject(null);
+    }
+  }, [projectId, selectProject, selectedProject?.id]);
 
   // Check if project has a video
   const hasVideo = selectedProject?.video_url;
@@ -183,6 +195,14 @@ const App: React.FC = () => {
                         )}
                       </button>
                     </div>
+                    
+                    <ChatInterface
+                      onAddEffect={addEffect}
+                      onRemoveEffect={removeEffect}
+                      effects={selectedProject.effects}
+                      videoDuration={videoRef.current?.duration || 0}
+                      getCurrentTime={() => videoRef.current?.currentTime || 0}
+                    />
                   </div>
 
                   <div style={{ width: '300px', flexShrink: 0 }}>
@@ -279,6 +299,15 @@ const App: React.FC = () => {
         </div>
       </main>
     </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <Routes>
+      <Route path="/project/:projectId" element={<Dashboard />} />
+      <Route path="/" element={<Dashboard />} />
+    </Routes>
   );
 };
 

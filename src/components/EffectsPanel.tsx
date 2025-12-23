@@ -184,7 +184,7 @@ const EffectsPanel: React.FC<EffectsPanelProps> = ({
             No effects added yet
           </p>
         ) : (
-          <div className="timeframe-list">
+          <div className="timeframe-list" style={{ opacity: effectEnabled ? 1 : 0.5, pointerEvents: effectEnabled ? 'auto' : 'none' }}>
             {[...effects]
               .sort((a, b) => a.start_time - b.start_time)
               .map((effect, index) => (

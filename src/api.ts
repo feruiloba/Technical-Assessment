@@ -117,3 +117,23 @@ export const uploadApi = {
     return response.json();
   },
 };
+
+export interface ChatCommand {
+  action: 'add' | 'delete';
+  type: string;
+  start_time?: number;
+  end_time?: number;
+  config?: Record<string, unknown>;
+}
+
+export interface ChatResponse {
+  commands: ChatCommand[];
+}
+
+export const chatApi = {
+  processCommand: (text: string, duration: number, currentTime: number) =>
+    apiFetch<ChatResponse>('/command', {
+      method: 'POST',
+      body: JSON.stringify({ text, duration, current_time: currentTime }),
+    }),
+};

@@ -16,6 +16,7 @@ from api.routes.projects import projects_bp
 from api.routes.effects import effects_bp
 from api.routes.detection import detection_bp
 from api.routes.upload import upload_bp
+from api.routes.chat import chat_bp
 
 app = Flask(__name__, static_folder='../build', static_url_path='/')
 
@@ -43,6 +44,7 @@ app.register_blueprint(projects_bp, url_prefix='/projects')
 app.register_blueprint(effects_bp, url_prefix='/projects')
 app.register_blueprint(detection_bp)
 app.register_blueprint(upload_bp)
+app.register_blueprint(chat_bp)
 
 # Create tables on startup
 with app.app_context():

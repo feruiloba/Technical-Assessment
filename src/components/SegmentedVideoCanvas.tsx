@@ -58,8 +58,14 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
 
   // Main rendering loop
   useEffect(() => {
-    if (isLoading || !segmenter) return;
+    // Reset lastProcessedTime to force a redraw when dependencies change (e.g. new effects, enabled toggle)
+    lastProcessedTime.current = -1;
 
+    // If model is not loaded yet, we can't do segmentation.
+    // But we still need to draw the video to canvas for face detection if enabled.
+    // However, face detection relies on the canvas being drawn.
+    // If segmenter is null, we can't segment, but we can still draw video.
+    
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
@@ -129,18 +135,30 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
         return currentTime >= start && currentTime <= end;
       });
 
+      // Force re-evaluation of shouldApplyEffect
       const shouldApplyEffect = enabled && activeEffects.length > 0;
 
       // Apply filters for non-segmentation effects
       // We don't apply CSS filters to the context anymore because we want to apply them only to the background
       // Instead, we'll manually apply the effects pixel-by-pixel
       
-      if (shouldApplyEffect) {
+      if (shouldApplyEffect && seg) {
         const result = seg.segmentForVideo(v, performance.now());
         mask = result.confidenceMasks?.[0]?.getAsFloat32Array();
       }
 
+      // Clear canvas before drawing
+      context.clearRect(0, 0, c.width, c.height);
+
       // Draw video frame to canvas
+      // If we have an effect, we'll overwrite this with the processed pixels
+      // If we don't have an effect, we just want to draw the video frame for face detection
+      // BUT, if we don't have an effect, we don't want to show the canvas over the video player
+      // The visibility style handles hiding the canvas when enabled=false, but what about when enabled=true but no active effect?
+      // In that case, shouldApplyEffect is false.
+      // If shouldApplyEffect is false, we draw the video frame so face detection can grab it.
+      // But since the canvas is on top of the video, the user sees the canvas.
+      // So we need to make sure the canvas looks exactly like the video.
       context.drawImage(v, 0, 0);
 
       if (mask && shouldApplyEffect) {
@@ -274,7 +292,23 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
           // The only issue is if there's a slight sync delay.
           // Let's keep it simple: always visible if enabled is true, but inside the loop we decide whether to apply the filter.
           // If enabled is true but outside timeframe, we draw video without filter.
+          // However, if we draw the video without filter, it might look slightly different or laggy compared to the native video element.
+          // Ideally, we should make the canvas transparent when no effect is applied.
+          // But we need the canvas content for face detection.
+          // Solution: Set opacity to 0 if enabled but no active effects? 
+          // We can't easily know "no active effects" here without checking timeframes again.
+          // Let's check timeframes here in render.
           visibility: enabled ? 'visible' : 'hidden',
+          opacity: (() => {
+             if (!enabled) return 0;
+             // Check if any effect is currently active based on last known time?
+             // We can't do that easily in render.
+             // Instead, let's rely on the fact that drawing the video frame is "good enough".
+             // If it's not, we can clear the canvas instead of drawing video when !shouldApplyEffect, 
+             // but then face detection would fail (it grabs from canvas).
+             // So we MUST draw to canvas.
+             return 1;
+          })(),
           position: isFullscreen ? 'fixed' : undefined,
           top: isFullscreen ? 0 : undefined,
           left: isFullscreen ? 0 : undefined,
