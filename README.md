@@ -1,118 +1,152 @@
-# Face Detection Technical Assessment
+# Video Processing with Face Detection
 
-A full-stack application for implementing face detection on video content, designed as a technical assessment platform.
+A full-stack video processing application featuring real-time face detection, person segmentation, and video effects. Built with Python Flask backend and React TypeScript frontend.
+
+## Features
+
+- Real-time face detection using OpenCV Haar Cascade
+- Person segmentation using MediaPipe
+- Video effects (blur, grayscale, sepia, invert) with timeframe controls
+- AI-powered chat interface for applying effects via natural language
+- Project management with persistent storage
+- Video upload via Cloudinary
 
 ## Project Structure
 
-This repository contains two main components:
+```
+├── api/                    # Python Flask Backend
+│   ├── main.py            # Entry point (port 8080)
+│   ├── models.py          # SQLAlchemy models (Project, Effect)
+│   ├── helpers.py         # Utilities and face cascade loader
+│   ├── requirements.txt   # Python dependencies
+│   └── routes/            # API endpoint blueprints
+│       ├── detection.py   # Face detection endpoint
+│       ├── projects.py    # Project CRUD
+│       ├── effects.py     # Effect management
+│       ├── chat.py        # AI command processing
+│       └── upload.py      # Video upload
+├── src/                    # React TypeScript Frontend
+│   ├── index.tsx          # App entry point
+│   ├── App.tsx            # Main dashboard component
+│   ├── api.ts             # API client
+│   ├── types.ts           # TypeScript interfaces
+│   ├── context/           # React context (ProjectContext)
+│   └── components/        # UI components
+├── package.json           # Frontend dependencies
+├── vercel.json            # Vercel deployment config
+└── CLAUDE.md              # Development guidelines
+```
 
-### Backend (`/app`)
-- **Technology**: Python Flask/FastAPI
-- **Purpose**: Provides API endpoints for face detection processing
-- **Key Files**:
-  - `main.py` - Main application entry point
-  - `helpers.py` - Utility functions and helpers
-  - `requirements.txt` - Python dependencies
+## Prerequisites
 
-### Frontend (`/frontend`)
-- **Technology**: React with TypeScript
-- **Purpose**: User interface for video playback and face detection visualization
-- **Key Files**:
-  - `src/App.tsx` - Main React component
-  - `src/components/` - Reusable UI components
-  - `src/consts.ts` - Configuration constants (video URL)
+- Python 3.8+
+- Node.js 16+
+- npm
 
 ## Getting Started
 
-### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- npm or yarn
-
 ### Backend Setup
 
-1. Navigate to the project root directory
-2. Create and activate a virtual environment:
+1. Create and activate a virtual environment:
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
-3. Install Python dependencies:
+2. Install Python dependencies:
    ```bash
-   pip install -r requirements.txt
+   pip install -r api/requirements.txt
    ```
 
-4. Start the backend server:
+3. Start the backend server:
    ```bash
-   python app/main.py
+   python -m api.main
    ```
 
 The backend will run on `http://127.0.0.1:8080`
 
 ### Frontend Setup
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install Node.js dependencies:
+1. Install Node.js dependencies:
    ```bash
    npm install
    ```
 
-3. Start the React development server:
+2. Start the React development server:
    ```bash
    npm start
    ```
 
 The frontend will run on `http://localhost:3000`
 
+### Running Both Servers
+
+For local development, run both servers in separate terminals:
+
+**Terminal 1 (Backend):**
+```bash
+source .venv/bin/activate
+python -m api.main
+```
+
+**Terminal 2 (Frontend):**
+```bash
+npm start
+```
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Database (optional - defaults to SQLite)
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+# Or use Prisma-style variable:
+PRISMA_DATABASE_URL=postgresql://user:password@host:5432/dbname
+
+# Cloudinary (for video upload)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Anthropic (for AI chat commands - optional)
+ANTHROPIC_API_KEY=your_api_key
+```
+
 ## API Endpoints
 
-### Backend Routes
-- `GET /hello-world` - Test endpoint to verify backend connectivity
-- Additional endpoints can be added for face detection processing
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/hello-world` | Health check |
+| POST | `/detect-faces` | Face detection (body: `{image: base64}`) |
+| GET/POST | `/projects` | List/create projects |
+| GET/PUT/DELETE | `/projects/<id>` | Get/update/delete project |
+| POST | `/projects/<id>/effects` | Add effect to project |
+| PUT | `/projects/<id>/effects` | Replace all effects |
+| DELETE | `/projects/<id>/effects` | Remove effects |
+| POST | `/upload` | Upload video to Cloudinary |
+| POST | `/command` | Process AI command for effects |
 
-## Usage
+## Testing
 
-1. Start both the backend and frontend servers
-2. Open your browser to `http://localhost:3000`
-3. The video will be displayed and ready for face detection
-4. Click "Ping Backend" to test the connection between frontend and backend
-5. Implement face detection logic in the backend and connect it to the frontend
+```bash
+npm test
+```
 
-## Development Notes
+## Production Build
 
-### For Assessment Takers
-- The main task is to implement face detection functionality
-- Backend: Add face detection processing endpoints in `app/main.py`
-- Frontend: Connect to your backend endpoints from `src/App.tsx`
-- The video URL is configured in `frontend/src/consts.ts`
+```bash
+npm run build
+```
 
-### Project Configuration
-- Video source is configured in `frontend/src/consts.ts`
-- Backend port is set to 8080 by default
-- Frontend development server runs on port 3000
+## Deployment
 
-## Technologies Used
+This project is configured for Vercel deployment. Push to main to trigger automatic deployment.
 
-- **Backend**: Python, Flask/FastAPI
-- **Frontend**: React, TypeScript, HTML5 Video
-- **Styling**: CSS3 with modern responsive design
-- **Development**: Hot reload for both frontend and backend
+## Technologies
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Implement your changes
-4. Test both backend and frontend
-5. Submit a pull request
-
-## License
-
-This project is designed for technical assessment purposes.
-
-You may use any tool you wish but you are responsible for understanding all parts of the implementation.
+- **Backend**: Python, Flask, SQLAlchemy, OpenCV
+- **Frontend**: React, TypeScript, MediaPipe
+- **Database**: SQLite (dev) / PostgreSQL (prod)
+- **Storage**: Cloudinary
+- **AI**: Anthropic Claude API
