@@ -45,7 +45,7 @@ const Dashboard: React.FC = () => {
     } else if (!projectId && selectedProject) {
       selectProject(null);
     }
-  }, [projectId, selectProject, selectedProject?.id]);
+  }, [projectId, selectProject, selectedProject]);
 
   // Check if project has a video
   const hasVideo = selectedProject?.video_url;
