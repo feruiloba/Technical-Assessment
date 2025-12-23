@@ -1,4 +1,8 @@
 {
+  "builds": [
+    { "src": "api/main.py", "use": "@vercel/python" },
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } }
+  ],
   "rewrites": [
     { "source": "/projects(.*)", "destination": "/api/main.py" },
     { "source": "/detect-faces", "destination": "/api/main.py" },
