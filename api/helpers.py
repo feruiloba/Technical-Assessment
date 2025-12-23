@@ -1,5 +1,4 @@
 import logging
-import ffmpeg
 import os
 import uuid
 import cv2
