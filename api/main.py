@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 # Load environment variables BEFORE importing modules that use them
 load_dotenv()
@@ -27,25 +28,40 @@ if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
 
 CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]}})
 
+def clean_postgres_url(url):
+    """Clean Postgres URL by removing unsupported parameters like api_key."""
+    if not url:
+        return url
+    
+    parsed = urlparse(url)
+    
+    # Parse query parameters and filter out unsupported ones
+    query_params = parse_qs(parsed.query)
+    # Keep only standard PostgreSQL connection parameters
+    valid_params = ['sslmode', 'connect_timeout', 'application_name', 'options']
+    cleaned_params = {k: v[0] for k, v in query_params.items() if k in valid_params}
+    
+    # Rebuild the URL
+    cleaned_url = urlunparse((
+        parsed.scheme.replace('postgres', 'postgresql') if parsed.scheme == 'postgres' else parsed.scheme,
+        parsed.netloc,
+        parsed.path,
+        parsed.params,
+        urlencode(cleaned_params) if cleaned_params else '',
+        parsed.fragment
+    ))
+    
+    return cleaned_url
+
 # Database Configuration
-# Use PRISMA_DATABASE_URL if available, otherwise DATABASE_URL, fallback to SQLite
-db_url = os.getenv('PRISMA_DATABASE_URL') or os.getenv('DATABASE_URL', 'sqlite:///video_editor.db')
+# Try POSTGRES_URL_NON_POOLING first (direct connection), then POSTGRES_URL
+db_url = os.getenv('POSTGRES_URL_NON_POOLING') or os.getenv('POSTGRES_URL') or os.getenv('DATABASE_URL', 'sqlite:///video_editor.db')
 
-# Convert Prisma-style URLs to standard PostgreSQL format for SQLAlchemy
-# Prisma URLs may use formats like: prisma+postgres://, prisma://accelerate.prisma-data.net/?api_key=...
-if 'prisma' in db_url.lower():
-    # If it's a Prisma Accelerate URL, we need a direct database URL instead
-    # Check for a direct postgres URL in DIRECT_URL or DATABASE_URL_UNPOOLED
-    direct_url = os.getenv('DIRECT_URL') or os.getenv('DATABASE_URL_UNPOOLED') or os.getenv('DATABASE_URL')
-    if direct_url and 'prisma' not in direct_url.lower():
-        db_url = direct_url
-    else:
-        # Try to extract/convert the URL - remove prisma+ prefix if present
-        db_url = db_url.replace("prisma+postgres://", "postgresql://")
-        db_url = db_url.replace("prisma+postgresql://", "postgresql://")
-        db_url = db_url.replace("prisma://", "postgresql://")
+# Clean the URL to remove unsupported parameters
+if 'postgresql' in db_url or 'postgres' in db_url:
+    db_url = clean_postgres_url(db_url)
 
-# Fix for Heroku/Vercel postgres URLs starting with postgres:// instead of postgresql://
+# Fix for URLs starting with postgres:// instead of postgresql://
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
