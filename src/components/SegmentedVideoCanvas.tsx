@@ -18,8 +18,33 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
   const [segmenter, setSegmenter] = useState<ImageSegmenter | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [videoReady, setVideoReady] = useState(false);
   const lastDetectionTime = useRef<number>(0);
   const lastProcessedTime = useRef<number>(0);
+
+  // Track when video is ready to ensure we re-process
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleReady = () => setVideoReady(true);
+    const handleLoadStart = () => setVideoReady(false); // Reset when new source loads
+
+    // Check if already ready
+    if (video.readyState >= 2) {
+      setVideoReady(true);
+    } else {
+      setVideoReady(false);
+    }
+
+    video.addEventListener('loadeddata', handleReady);
+    video.addEventListener('loadstart', handleLoadStart);
+
+    return () => {
+      video.removeEventListener('loadeddata', handleReady);
+      video.removeEventListener('loadstart', handleLoadStart);
+    };
+  }, [videoRef]);
 
   // Load the MediaPipe segmentation model once on mount
   useEffect(() => {
@@ -263,7 +288,7 @@ const SegmentedVideoCanvas: React.FC<Props> = ({ videoRef, enabled, timeframes =
     animationId = requestAnimationFrame(processFrame);
 
     return () => cancelAnimationFrame(animationId);
-  }, [enabled, isLoading, segmenter, videoRef, onDetections, timeframes, onProcessingTime]);
+  }, [enabled, isLoading, segmenter, videoRef, onDetections, timeframes, onProcessingTime, videoReady]);
 
   if (error) {
     return <div className="segmentation-error">Error: {error}</div>;

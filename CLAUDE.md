@@ -4,78 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Full-stack video processing application with face detection and person segmentation. Python Flask backend with React TypeScript frontend.
+Full-stack video processing application with face detection and person segmentation. Python Flask backend with React TypeScript frontend. Features AI-powered chat interface for applying effects via natural language.
 
 ## Development Commands
 
 ### Backend (from project root)
 ```bash
-# Activate virtual environment
 source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Start backend server (runs on http://127.0.0.1:8080)
-python -m api.main
+pip install -r api/requirements.txt
+python -m api.main                    # Runs on http://127.0.0.1:8080
 ```
 
-### Frontend (from /app directory)
+### Frontend (from project root)
 ```bash
-cd app
-
-# Install dependencies
 npm install
-
-# Start development server (runs on http://localhost:3000)
-npm start
-
-# Run tests
-npm test
-
-# Production build
-npm run build
+npm start                             # Dev server on http://localhost:3000
+npm test                              # Run tests
+npm run build                         # Production build
 ```
 
 ## Architecture
 
 ### Backend (`/api`)
-- **Entry point**: `api/main.py` - Flask app with CORS, SQLite/Postgres database via SQLAlchemy
-- **Routes**: Blueprints in `api/routes/`
-  - `detection.py` - POST `/detect-faces` accepts base64 image, returns bounding boxes using Haar Cascade
-  - `projects.py` - CRUD for projects at `/projects`
-  - `effects.py` - Manage video effects per project at `/projects/<id>/effects`
-- **Models**: `api/models.py` - `Project` and `Effect` SQLAlchemy models
-- **Helpers**: `api/helpers.py` - Pre-loaded `face_cascade` classifier, temp file utilities
+- **Entry point**: `api/main.py` - Flask app with CORS, SQLite/PostgreSQL via SQLAlchemy
+- **Routes** (`api/routes/`):
+  - `detection.py` - Face detection using OpenCV Haar Cascade
+  - `projects.py` - Project CRUD operations
+  - `effects.py` - Effect management with timeframe overlap validation
+  - `chat.py` - Anthropic Claude integration for natural language commands
+  - `upload.py` - Cloudinary video upload
+- **Models**: `api/models.py` - `Project` and `Effect` with cascade delete
+- **Helpers**: `api/helpers.py` - Pre-loaded `face_cascade` classifier
 
-### Frontend (`/app`)
-- **Entry point**: `app/src/App.tsx` - Main component managing video playback, segmentation, and face detection state
+### Frontend (`/src`)
+- **Entry**: `src/index.tsx` - React app with Router and ProjectProvider
+- **Main**: `src/App.tsx` - Dashboard managing video playback, detection, and effects
+- **State**: `src/context/ProjectContext.tsx` - Global state for projects/effects
+- **API Client**: `src/api.ts` - All backend API calls
 - **Key components**:
-  - `SegmentedVideoCanvas.tsx` - Uses MediaPipe ImageSegmenter for real-time person segmentation (grayscale background effect). Sends frames to `/detect-faces` every 500ms
-  - `FaceDetectionOverlay.tsx` - Renders bounding boxes scaled to video display size
-  - `EffectsPanel.tsx` - UI for toggling effects and managing timeframes
-  - `VideoPlayer.tsx` - HTML5 video wrapper
-- **Config**: `app/src/consts.ts` - Video URL
+  - `SegmentedVideoCanvas.tsx` - MediaPipe person segmentation, sends frames to `/detect-faces` every 500ms
+  - `FaceDetectionOverlay.tsx` - Renders bounding boxes scaled to display
+  - `EffectsPanel.tsx` - Effect type selection (blur, grayscale, sepia, invert) with timeframe inputs
+  - `ChatInterface.tsx` - Natural language effect commands
 
 ### Data Flow
 1. Video plays in `VideoPlayer`, `SegmentedVideoCanvas` captures frames via canvas
-2. MediaPipe processes frames client-side for person segmentation (colored person, grayscale background)
+2. MediaPipe processes frames client-side for person segmentation
 3. Every 500ms, canvas frame sent as base64 JPEG to backend `/detect-faces`
 4. Backend returns face bounding boxes (absolute pixel coordinates)
 5. Frontend scales coordinates to display size and renders via `FaceDetectionOverlay`
-
-### FaceDetection Interface
-```typescript
-interface FaceDetection {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  confidence: number;
-  label?: string;
-}
-```
+6. Effects stored in database, applied via canvas rendering based on current video time
 
 ## API Endpoints
 
@@ -84,6 +62,15 @@ interface FaceDetection {
 | GET | `/hello-world` | Health check |
 | POST | `/detect-faces` | Face detection (body: `{image: base64}`) |
 | GET/POST | `/projects` | List/create projects |
-| GET/PUT | `/projects/<id>` | Get/update project |
+| GET/PUT/DELETE | `/projects/<id>` | Get/update/delete project |
 | POST | `/projects/<id>/effects` | Add effect to project |
-| PUT | `/projects/<id>/effects` | Replace all effects for project |
+| PUT | `/projects/<id>/effects` | Replace all effects |
+| DELETE | `/projects/<id>/effects` | Remove effects |
+| POST | `/upload` | Upload video to Cloudinary |
+| POST | `/command` | Process AI command for effects |
+
+## Environment Variables
+
+Required in `.env`:
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` - Video storage
+- `ANTHROPIC_API_KEY` - AI chat commands (optional, has mock fallback)
